@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Log Pergerakan Pengetua</title>
+<link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<link rel="manifest" href="./manifest.json">
+<style>
+:root{
+  --primary:#6a1b9a;
+  --primary2:#45207a;
+  --blue:#1976d2;
+  --gold:#c99700;
+  --danger:#d9365e;
+  --bg:#f4f7f6;
+  --card:#ffffff;
+  --text:#20302a;
+  --muted:#68756f;
+  --border:#dce5e0;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text)}
+.app{max-width:1200px;margin:auto;padding:18px}
+header{background:linear-gradient(135deg,var(--primary),var(--primary2));color:#fff;border-radius:18px;padding:22px;display:flex;gap:18px;align-items:center;box-shadow:0 5px 18px #0001}
+.logo{width:82px;height:82px;border-radius:14px;background:#fff;object-fit:contain;padding:5px;display:none}
+.header-text h1{margin:0;font-size:26px}
+.header-text p{margin:7px 0 0;opacity:.9}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;margin-top:18px;box-shadow:0 3px 12px #0000000a}
+h2{margin:0 0 16px;font-size:20px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.full{grid-column:1/-1}
+label{display:block;font-weight:700;margin-bottom:6px}
+input,textarea,select{width:100%;border:1px solid #cbd8d1;border-radius:10px;padding:11px 12px;font-size:15px;background:#fff}
+textarea{min-height:88px;resize:vertical}
+.actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:15px}
+button{border:0;border-radius:10px;padding:11px 16px;font-size:14px;font-weight:700;cursor:pointer}
+button:active{transform:translateY(1px)}
+.primary{background:var(--primary);color:#fff}
+.secondary{background:#edf2ef;color:#20302a}
+.blue{background:var(--blue);color:#fff}
+.gold{background:#e4b91c;color:#222}
+.danger{background:var(--danger);color:#fff}
+.small{font-size:13px;color:var(--muted)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.stat{background:#f2f8f5;border-radius:13px;padding:15px;text-align:center}
+.stat b{display:block;font-size:26px;color:var(--primary)}
+.table-wrap{overflow:auto}
+table{width:100%;border-collapse:collapse;min-width:950px}
+th,td{border-bottom:1px solid var(--border);padding:10px 8px;text-align:left;vertical-align:top;font-size:14px}
+th{background:#eef5f1}
+.row-actions{display:flex;gap:6px;flex-wrap:wrap}
+.row-actions button{padding:7px 10px;font-size:12px}
+.empty{text-align:center;color:var(--muted);padding:25px}
+.settings-grid{display:grid;grid-template-columns:2fr 2fr 1fr;gap:14px}
+.file-label{display:inline-flex;align-items:center;justify-content:center;background:#edf2ef;color:#20302a;border-radius:10px;padding:11px 16px;font-weight:700;cursor:pointer}
+.file-label input{display:none}
+.notice{background:#fff8dd;border-left:5px solid #e4b91c;padding:12px;border-radius:8px;margin-top:12px;font-size:13px}
+footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
+@media(max-width:700px){
+ .app{padding:10px}
+ .grid,.settings-grid{grid-template-columns:1fr}
+ .full{grid-column:auto}
+ header{padding:16px}
+ .logo{width:65px;height:65px}
+ .header-text h1{font-size:20px}
+ .stats{grid-template-columns:1fr 1fr}
+}
+ .print-head{display:none}
+
+@media print{
+  body{background:#fff}
+  .no-print, header, .card:not(#dataCard), footer{display:none!important}
+  #dataCard{border:0;box-shadow:none;margin:0;padding:0}
+  table{min-width:0;font-size:10px}
+  th,td{padding:5px}
+
+  .print-head{
+    display:block!important;
+    text-align:center;
+  }
+
+  #printLogo{
+    display:block!important;
+    width:70px!important;
+    height:70px!important;
+    object-fit:contain;
+    margin:0 auto 8px;
+  }
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+<header>
+  <img id="schoolLogo" class="logo" alt="Logo sekolah">
+  <div class="header-text">
+    <h1>LOG PERGERAKAN PENGETUA</h1>
+    <p id="schoolName">SK BUKIT JEROK</p>
+    <p id="principalName">MOHD ZULKIFLI BIN MAT SALLEH</p>
+    <p>Sistem Rekod Pergerakan & Aktiviti Pengetua</p>
+  </div>
+</header>
+
+<section class="card no-print" id="formCard">
+  <h2 id="formTitle">Tambah Pergerakan</h2>
+  <input type="hidden" id="editId">
+
+  <div class="grid">
+    <div>
+      <label for="date">Tarikh</label>
+      <input type="date" id="date">
+    </div>
+    <div>
+      <label for="day">Hari</label>
+      <input type="text" id="day" readonly placeholder="Automatik">
+    </div>
+    <div>
+      <label for="time">Masa</label>
+      <input type="time" id="time">
+    </div>
+    <div>
+      <label for="activity">Aktiviti / Program</label>
+      <input id="activity" placeholder="Contoh: Mesyuarat Pengurusan">
+    </div>
+    <div>
+      <label for="place">Tempat</label>
+      <input id="place" placeholder="Contoh: PPD Besut">
+    </div>
+    <div>
+      <label for="organizer">Anjuran / Pengelola</label>
+      <input id="organizer" placeholder="Contoh: PPD Besut">
+    </div>
+    <div class="full">
+      <label for="notes">Catatan</label>
+      <textarea id="notes" placeholder="Catatan berkaitan pergerakan atau aktiviti"></textarea>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button class="primary" onclick="saveReport()">💾 Simpan</button>
+    <button class="secondary" onclick="clearForm()">↺ Kosongkan</button>
+  </div>
+</section>
+
+<section class="card" id="dataCard">
+  <div class="print-head">
+<img id="printLogo" alt="Logo sekolah">    
+    <div style="text-align:center;font-weight:700;font-size:18px" id="printSchool"></div>
+    <div style="text-align:center;font-weight:700;margin-top:4px">LAPORAN LOG PERGERAKAN PENGETUA</div>
+    <div style="text-align:center;margin:4px 0 12px" id="printPrincipal"></div>
+  </div>
+
+  <h2 class="no-print">📋 Senarai Pergerakan</h2>
+
+  <div class="stats no-print">
+    <div class="stat"><b id="total">0</b>Jumlah Rekod</div>
+    <div class="stat"><b id="yearCount">0</b>Tahun</div>
+    <div class="stat"><b id="monthCount">0</b>Bulan</div>
+  </div>
+
+  <div class="actions no-print">
+    <button class="blue" onclick="exportJSON()">💾 Backup Data</button>
+    <label class="file-label">📥 Restore Data
+      <input type="file" id="importFile" accept=".json,application/json" onchange="importJSON(event)">
+    </label>
+    <button class="gold" onclick="exportCSV()">📊 Eksport Excel / CSV</button>
+    <button class="primary" onclick="printReports()">🖨️ Cetak / PDF</button>
+    <button class="danger" onclick="clearAll()">🗑️ Padam Semua</button>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>No.</th><th>Tarikh</th><th>Hari</th><th>Masa</th>
+          <th>Aktiviti / Program</th><th>Tempat</th><th>Anjuran</th><th>Catatan</th><th class="no-print">Tindakan</th>
+        </tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+    <div id="empty" class="empty">Tiada rekod untuk dipaparkan.</div>
+  </div>
+</section>
+
+<section class="card no-print">
+  <h2>⚙️ Tetapan</h2>
+  <div class="settings-grid">
+    <div>
+      <label for="setName">Nama Sekolah</label>
+      <input id="setName" placeholder="Nama sekolah">
+    </div>
+    <div>
+      <label for="setPrincipal">Nama Pengetua</label>
+      <input id="setPrincipal" placeholder="Nama Pengetua">
+    </div>
+    <div>
+      <label for="setLogo">Logo Sekolah</label>
+      <label class="file-label" style="width:100%">🖼️ Pilih Logo
+        <input type="file" id="setLogo" accept="image/*" onchange="loadLogo(event)">
+      </label>
+    </div>
+  </div>
+  <div class="actions">
+    <button class="primary" onclick="saveSettings()">💾 Simpan Tetapan</button>
+    <button class="secondary" onclick="removeLogo()">✕ Buang Logo</button>
+  </div>
+  <div class="notice">Data disimpan dalam pelayar peranti ini menggunakan localStorage. Gunakan <b>Backup Data</b> secara berkala untuk salinan keselamatan.</div>
+</section>
+
+<footer>Log Pergerakan Pengetua • Versi 1.0 • Berfungsi tanpa pangkalan data luaran</footer>
+</div>
+
+<script>
+"use strict";
+
+const DATA_KEY = "log_pergerakan_pengetua_data_v1";
+const SETTINGS_KEY = "log_pergerakan_pengetua_settings_v1";
+
+let reports = [];
+let settings = {
+  schoolName: "SK BUKIT JEROK",
+  principalName: "PENGETUA",
+  logo: ""
+};
+
+function $(id){ return document.getElementById(id); }
+
+function loadData(){
+  try{
+    const raw = localStorage.getItem(DATA_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    reports = Array.isArray(parsed) ? parsed : [];
+  }catch(e){
+    reports = [];
+  }
+
+  try{
+    const raw = localStorage.getItem(SETTINGS_KEY);
+    const parsed = raw ? JSON.parse(raw) : {};
+    if(parsed && typeof parsed === "object") settings = {...settings, ...parsed};
+  }catch(e){}
+}
+
+function persist(){
+  localStorage.setItem(DATA_KEY, JSON.stringify(reports));
+}
+
+function persistSettings(){
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+}
+
+function esc(value){
+  return String(value ?? "")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
+
+function formatDate(value){
+  if(!value) return "-";
+  const p = value.split("-");
+  return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : value;
+}
+
+function getDay(dateString){
+  if(!dateString) return "";
+  const d = new Date(dateString + "T00:00:00");
+  return new Intl.DateTimeFormat("ms-MY",{weekday:"long"}).format(d);
+}
+
+function updateDay(){
+  $("day").value = getDay($("date").value);
+}
+
+function saveReport(){
+  const date = $("date").value;
+  const time = $("time").value;
+  const activity = $("activity").value.trim();
+  const place = $("place").value.trim();
+  const organizer = $("organizer").value.trim();
+  const notes = $("notes").value.trim();
+
+  if(!date){
+    alert("Sila masukkan Tarikh.");
+    $("date").focus();
+    return;
+  }
+  if(!activity){
+    alert("Sila masukkan Aktiviti / Program.");
+    $("activity").focus();
+    return;
+  }
+
+  const editId = $("editId").value;
+
+  if(editId){
+    const index = reports.findIndex(r => r.id === editId);
+    if(index >= 0){
+      reports[index] = {
+        ...reports[index], date, day:getDay(date), time, activity, place, organizer, notes
+      };
+    }
+    alert("Rekod berjaya dikemas kini.");
+  }else{
+    reports.push({
+      id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+      number: reports.length + 1,
+      date, day:getDay(date), time, activity, place, organizer, notes,
+      createdAt: new Date().toISOString()
+    });
+    alert("Rekod berjaya disimpan.");
+  }
+
+  persist();
+  clearForm(false);
+  render();
+}
+
+function editReport(id){
+  const r = reports.find(x => x.id === id);
+  if(!r) return;
+  $("editId").value = r.id;
+  $("date").value = r.date || "";
+  $("day").value = r.day || getDay(r.date);
+  $("time").value = r.time || "";
+  $("activity").value = r.activity || "";
+  $("place").value = r.place || "";
+  $("organizer").value = r.organizer || "";
+  $("notes").value = r.notes || "";
+  $("formTitle").textContent = "✏️ Edit Pergerakan";
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+function deleteReport(id){
+  if(!confirm("Padam rekod ini?")) return;
+  reports = reports.filter(r => r.id !== id);
+  persist();
+  render();
+}
+
+function clearForm(showAlert=true){
+  $("editId").value = "";
+  $("date").value = "";
+  $("day").value = "";
+  $("time").value = "";
+  $("activity").value = "";
+  $("place").value = "";
+  $("organizer").value = "";
+  $("notes").value = "";
+  $("formTitle").textContent = "Tambah Pergerakan";
+  if(showAlert) $("date").focus();
+}
+
+function render(){
+  const tbody = $("rows");
+  $("total").textContent = reports.length;
+
+  const years = new Set(reports.map(r => r.date ? r.date.slice(0,4) : "").filter(Boolean));
+  const months = new Set(reports.map(r => r.date ? r.date.slice(0,7) : "").filter(Boolean));
+  $("yearCount").textContent = years.size;
+  $("monthCount").textContent = months.size;
+
+  if(!reports.length){
+    tbody.innerHTML = "";
+    $("empty").style.display = "block";
+    return;
+  }
+
+  $("empty").style.display = "none";
+
+  const sorted = [...reports].sort((a,b) => {
+    const da = `${a.date||""} ${a.time||""}`;
+    const db = `${b.date||""} ${b.time||""}`;
+    return db.localeCompare(da);
+  });
+
+  tbody.innerHTML = sorted.map((r,i) => `
+    <tr>
+      <td>${i+1}</td>
+      <td>${esc(formatDate(r.date))}</td>
+      <td>${esc(r.day || getDay(r.date) || "-")}</td>
+      <td>${esc(r.time || "-")}</td>
+      <td>${esc(r.activity)}</td>
+      <td>${esc(r.place || "-")}</td>
+      <td>${esc(r.organizer || "-")}</td>
+      <td>${esc(r.notes || "-")}</td>
+      <td class="no-print">
+        <div class="row-actions">
+          <button class="blue" onclick="editReport('${esc(r.id)}')">Edit</button>
+          <button class="danger" onclick="deleteReport('${esc(r.id)}')">Padam</button>
+        </div>
+      </td>
+    </tr>
+  `).join("");
+}
+
+function exportJSON(){
+  const payload = {
+    app: "Log Pergerakan Pengetua",
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    settings,
+    reports
+  };
+  downloadFile(
+    "Log_Pergerakan_Pengetua_Backup.json",
+    JSON.stringify(payload,null,2),
+    "application/json"
+  );
+}
+
+function exportCSV(){
+  const headers = ["No.","Tarikh","Hari","Masa","Aktiviti","Tempat","Anjuran","Catatan"];
+  const rows = reports.map((r,i) => [
+    i+1, formatDate(r.date), r.day || getDay(r.date), r.time || "",
+    r.activity || "", r.place || "", r.organizer || "", r.notes || ""
+  ]);
+
+  const csv = [headers,...rows].map(row =>
+    row.map(v => `"${String(v ?? "").replaceAll('"','""')}"`).join(",")
+  ).join("\r\n");
+
+  downloadFile("Log_Pergerakan_Pengetua.csv","\uFEFF"+csv,"text/csv;charset=utf-8");
+}
+
+function downloadFile(name,text,type){
+  const blob = new Blob([text],{type});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+
+function importJSON(event){
+  const file = event.target.files && event.target.files[0];
+  if(!file) return;
+
+  const reader = new FileReader();
+
+  reader.onload = function(){
+    try{
+      const x = JSON.parse(reader.result);
+
+      let importedReports = null;
+      let importedSettings = null;
+
+      if(Array.isArray(x)){
+        importedReports = x;
+      }else if(x && Array.isArray(x.reports)){
+        importedReports = x.reports;
+        if(x.settings && typeof x.settings === "object") importedSettings = x.settings;
+      }
+
+      if(!importedReports){
+        throw new Error("Format fail tidak dikenali.");
+      }
+
+      if(!confirm(`Restore ${importedReports.length} rekod? Data semasa akan digantikan.`)){
+        event.target.value = "";
+        return;
+      }
+
+      reports = importedReports.map(r => ({
+        id: r.id || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()+Math.random())),
+        number: r.number || 0,
+        date: r.date || "",
+        day: r.day || getDay(r.date),
+        time: r.time || "",
+        activity: r.activity || r.aktiviti || "",
+        place: r.place || r.tempat || "",
+        organizer: r.organizer || r.anjuran || "",
+        notes: r.notes || r.catatan || "",
+        createdAt: r.createdAt || new Date().toISOString()
+      }));
+
+      if(importedSettings){
+        settings = {...settings,...importedSettings};
+        persistSettings();
+        applySettings();
+      }
+
+      persist();
+      render();
+      alert("Import berjaya.");
+    }catch(err){
+      alert("Fail JSON tidak sah atau rosak.");
+    }finally{
+      event.target.value = "";
+    }
+  };
+
+  reader.onerror = function(){
+    alert("Fail tidak dapat dibaca.");
+    event.target.value = "";
+  };
+
+  reader.readAsText(file);
+}
+
+function clearAll(){
+  if(!reports.length){
+    alert("Tiada rekod untuk dipadam.");
+    return;
+  }
+  if(!confirm("AMARAN: Semua rekod akan dipadam. Teruskan?")) return;
+  reports = [];
+  persist();
+  render();
+  clearForm(false);
+  alert("Semua rekod telah dipadam.");
+}
+
+function saveSettings(){
+  settings.schoolName = $("setName").value.trim() || "SEKOLAH";
+  settings.principalName = $("setPrincipal").value.trim() || "PENGETUA";
+  persistSettings();
+  applySettings();
+  alert("Tetapan berjaya disimpan.");
+}
+
+function applySettings(){
+  $("schoolName").textContent = settings.schoolName || "SEKOLAH";
+  $("principalName").textContent = settings.principalName || "PENGETUA";
+  $("setName").value = settings.schoolName || "";
+  $("setPrincipal").value = settings.principalName || "";
+
+  // Paparkan logo di aplikasi dan pada cetakan/PDF.
+  const schoolLogo = $("schoolLogo");
+  const printLogo = $("printLogo");
+
+  if(settings.logo){
+    schoolLogo.src = settings.logo;
+    schoolLogo.style.display = "block";
+
+    printLogo.src = settings.logo;
+    printLogo.style.display = "block";
+  }else{
+    schoolLogo.removeAttribute("src");
+    schoolLogo.style.display = "none";
+
+    printLogo.removeAttribute("src");
+    printLogo.style.display = "none";
+  }
+
+  $("printSchool").textContent = settings.schoolName || "SEKOLAH";
+  $("printPrincipal").textContent = settings.principalName || "PENGETUA";
+}
+
+function loadLogo(event){
+  const file = event.target.files && event.target.files[0];
+  if(!file) return;
+
+  if(file.size > 2 * 1024 * 1024){
+    alert("Saiz logo terlalu besar. Sila pilih gambar kurang daripada 2MB.");
+    event.target.value = "";
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = function(){
+    settings.logo = reader.result;
+    persistSettings();
+    applySettings();
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeLogo(){
+  settings.logo = "";
+  persistSettings();
+  applySettings();
+  $("setLogo").value = "";
+}
+
+function printReports(){
+  render();
+  window.print();
+}
+
+$("date").addEventListener("change",updateDay);
+
+loadData();
+applySettings();
+render();
+</script>
+</body>
+</html>
