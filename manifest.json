@@ -1,0 +1,21 @@
+{
+  "name": "Log Pergerakan Pengetua",
+  "short_name": "Log Pengetua",
+  "description": "Sistem Rekod Pergerakan & Aktiviti Pengetua Sekolah Menengah",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#800000",
+  "icons": [
+    {
+      "src": "./icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "./icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
